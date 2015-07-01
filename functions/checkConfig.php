@@ -16,27 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-chdir(dirname(__FILE__));
-$config = include_once("config.php");
-include_once("functions/main.php");
-include_once("functions/checkConfig.php");
-if (!ini_get('date.timezone')) {
-	date_default_timezone_set('GMT');
+
+if (!isset($config["init"])) {
+	$config["init"] = true;
 }
-if ($config["init"]) {
-	echo "Install\n";
-	echo "Creating database\n";
-	if (!init()) {
-		echo "Terminating\n";
-		return 1;
-	}
-	$config["init"] = FALSE;
-	echo "Installation mode disabled\nInstallation finished\n";
+if (!isset($config["dbname"])) {
+	$config["dbname"] = "database.db";
 }
-file_put_contents("config.php", "<?php\n\nreturn " . var_export($config, true) . ";");
-$data = getXML($config["files"]);
-if (!xmlToDB($data, $config["dbname"])) {
-	echo "Open failed\n";
-	return 1;
+if (!isset($config["files"])) {
+	$config["files"] = array(
+		["example"] => "http://example.org/status.xml"
+	);
 }
-return 0;
