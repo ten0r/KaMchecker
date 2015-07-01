@@ -35,10 +35,6 @@ function init() {
 		return FALSE;
 	}
 	echo "Table created successfully\n";
-	/* 	if (dbclose($db)) {
-	  return FALSE;
-	  } */
-	$config["init"] = FALSE;
 	return TRUE;
 }
 
@@ -104,85 +100,77 @@ function xmlToDB($datas, $dbname) {
 
 function updateRooms($name, $curtime, $room, $db) {
 	if ($room->state == "Lobby") {
-		insertLobby(array(
-			'id' => $room->attributes()['id'],
-			'map' => $room->map,
-			'db' => $db
-		));
+		insertLobby($db, array($room->attributes()['id'], $room->map));
 	} else {
-		$res = searchExisted(array(
-			'name' => $name,
-			'id' => $room->attributes()['id'],
-			'map' => $room->map,
-			'time' => $room->gametime,
-			'db' => $db
-		));
+		$res = searchExisted($db, array($name, $room->attributes()['id'],
+			$room->map, $room->gametime));
 		$row = $res->fetchArray(SQLITE3_NUM);
-		if (count($row) == 2) {
-			updateExisted(array(
-				'gametime' => $room->gametime,
-				'curtime' => $curtime,
-				'id' => $row[0],
-				'db' => $db
-			));
+		if (count($row) === 1 and $row!==FALSE) {
+			updateExisted($db, array($room->gametime, $curtime, $row[0]));
 		} else {
-			insertNew(array(
-				'name' => $name,
-				'id' => $room->attributes()['id'],
-				'count' => $room->roomplayercount,
-				'curtime' => $curtime,
-				'gametime' => $room->gametime,
-				'map' => $room->map,
-				'db' => $db
-			));
+			insertNew($db, array($name, $room->attributes()['id'],
+				$room->roomplayercount, $curtime, $room->gametime, $curtime,
+				$room->map));
 		}
 	}
 }
 
-function insertLobby(array $req) {
-	$insert = "INSERT INTO lobby (count,map) VALUES (:roomid,:map);";
-	$stmt = $req['db']->prepare($insert);
-	$stmt->bindValue(":roomid", $req['id'], SQLITE3_INTEGER);
-	$stmt->bindValue(":map", $req['map'], SQLITE3_TEXT);
+function stmtBind($stmt, $params, $outertypes) {
+	$types = strtolower($outertypes);
+	if (count($params) !== strlen($types)) {
+		echo "Number of parameters differs from number of types\n";
+		return FALSE;
+	}
+	if (preg_match("/[^idsbn]+/", $types)) {
+		echo "Unsuported symbols in types string\n";
+		echo "$types\n";
+		return FALSE;
+	}
+	for ($i = 0; $i < count($params); $i++) {
+		$stmt->bindValue($i + 1, $params[$i], typeToSqlite($types[$i]));
+	}
+	return TRUE;
+}
+
+function typeToSqlite($type) {
+	switch ($type) {
+		case "i": return SQLITE3_INTEGER;
+		case "d": return SQLITE3_FLOAT;
+		case "s": return SQLITE3_TEXT;
+		case "b": return SQLITE3_BLOB;
+		case "n": return SQLITE3_NULL;
+	}
+}
+
+function insertLobby($db, $params) {
+	$insert = "INSERT INTO lobby (count,map) VALUES (?,?);";
+	$stmt = $db->prepare($insert);
+	stmtBind($stmt, $params, "is");
 	$stmt->execute();
 }
 
-function searchExisted(array $req) {
-	$select = "SELECT id,state FROM games WHERE "
-			. "state=0 AND servername=:name AND roomid=:roomid "
-			. "AND map=:map AND gametime<=:gametime;";
-	$stmt = $req['db']->prepare($select);
-	$stmt->bindValue(":name", $req['name'], SQLITE3_TEXT);
-	$stmt->bindValue(":roomid", $req['id'], SQLITE3_INTEGER);
-	$stmt->bindValue(":map", $req['map'], SQLITE3_TEXT);
-	$stmt->bindValue(":gametime", $req['time'], SQLITE3_TEXT);
+function searchExisted($db, $params) {
+	$select = "SELECT id FROM games WHERE state=0 AND servername=?
+		AND roomid=? AND map=? AND gametime<=?;";
+	$stmt = $db->prepare($select);
+	stmtBind($stmt, $params, "siss");
 	$res = $stmt->execute();
 	return $res;
 }
 
-function insertNew(array $req) {
-	$insert = "INSERT INTO games "
-			. "(servername,roomid,count,starttime,gametime,updatetime,map) "
-			. "VALUES (:name, :roomid, :count, "
-			. ":starttime, :gametime, :updatetime, :map);";
-	$stmt = $req['db']->prepare($insert);
-	$stmt->bindValue(":name", $req['name'], SQLITE3_TEXT);
-	$stmt->bindValue(":roomid", $req['id'], SQLITE3_INTEGER);
-	$stmt->bindValue(":count", $req['count'], SQLITE3_INTEGER);
-	$stmt->bindValue(":starttime", $req['curtime'], SQLITE3_INTEGER);
-	$stmt->bindValue(":gametime", $req['gametime'], SQLITE3_TEXT);
-	$stmt->bindValue(":updatetime", $req['curtime'], SQLITE3_INTEGER);
-	$stmt->bindValue(":map", $req['map'], SQLITE3_TEXT);
+function insertNew($db, $params) {
+	$insert = "INSERT INTO games
+		(servername,roomid,count,starttime,gametime,updatetime,map)
+		VALUES (?, ?, ?, ?, ?, ?, ?);";
+	$stmt = $db->prepare($insert);
+	stmtBind($stmt, $params, "siiisis");
 	$stmt->execute();
 }
 
-function updateExisted(array $req) {
-	$update = "UPDATE games SET "
-			. "gametime=:gametime, updatetime=:updatetime WHERE id=:id;";
-	$stmt = $req['db']->prepare($update);
-	$stmt->bindValue(":gametime", $req['gametime'], SQLITE3_TEXT);
-	$stmt->bindValue(":updatetime", $req['curtime'], SQLITE3_INTEGER);
-	$stmt->bindValue(":id", $req['id'], SQLITE3_INTEGER);
+function updateExisted($db, $params) {
+	$update = "UPDATE games SET gametime=?, updatetime=? WHERE id=?;";
+	$stmt = $db->prepare($update);
+	stmtBind($stmt, $params, "sii");
 	$stmt->execute();
 }
 
