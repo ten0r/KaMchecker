@@ -79,7 +79,7 @@ function xmlToDB($datas, $dbname) {
 	$curtime = time();
 	echo date('d-m-Y_H:i:s', $curtime) . " $curtime\n";
 	if (!$db = dbopen($dbname)) {
-		return 1;
+		return FALSE;
 	}
 
 	$db->exec("DELETE FROM lobby;");
@@ -99,18 +99,25 @@ function xmlToDB($datas, $dbname) {
 }
 
 function updateRooms($name, $curtime, $room, $db) {
+	//print_r($room->attributes()['id']);
+	//print_r($room->players);
+	//print_r($room);
 	if ($room->state == "Lobby") {
 		insertLobby($db, array($room->attributes()['id'], $room->map));
 	} else {
 		$res = searchExisted($db, array($name, $room->attributes()['id'],
 			$room->map, $room->gametime));
 		$row = $res->fetchArray(SQLITE3_NUM);
-		if (count($row) === 1 and $row!==FALSE) {
+		if (count($row) === 1 and $row !== FALSE) {
 			updateExisted($db, array($room->gametime, $curtime, $row[0]));
+			$id=$row[0];
+			echo "1 $id\n";
 		} else {
 			insertNew($db, array($name, $room->attributes()['id'],
 				$room->roomplayercount, $curtime, $room->gametime, $curtime,
 				$room->map));
+			$id=$db->lastInsertRowID();
+			echo "2 $id\n";
 		}
 	}
 }
@@ -175,7 +182,7 @@ function updateExisted($db, $params) {
 }
 
 function closeRooms($curtime, $db) {
-	$req = "UPDATE games SET state=1 WHERE updatetime<" . $curtime . " AND state=0;";
+	$req = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
 	$db->exec($req);
 }
 
@@ -183,7 +190,7 @@ function dbopen($dbname) {
 	$db = new SQLite3($dbname);
 	if (!$db) {
 		echo $db->lastErrorMsg();
-		return 0;
+		return FALSE;
 	} else {
 		echo "Opened database successfully\n";
 		return $db;
