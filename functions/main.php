@@ -110,15 +110,14 @@ function updateRooms($name, $curtime, $room, $db) {
 		$row = $res->fetchArray(SQLITE3_NUM);
 		if (count($row) === 1 and $row !== FALSE) {
 			updateExisted($db, array($room->gametime, $curtime, $row[0]));
-			$id=$row[0];
-			echo "1 $id\n";
+			$id = $row[0];
 		} else {
 			insertNew($db, array($name, $room->attributes()['id'],
 				$room->roomplayercount, $curtime, $room->gametime, $curtime,
 				$room->map));
-			$id=$db->lastInsertRowID();
-			echo "2 $id\n";
+			$id = $db->lastInsertRowID();
 		}
+		updatePlayers($db, array($room->players, $id));
 	}
 }
 
@@ -181,9 +180,23 @@ function updateExisted($db, $params) {
 	$stmt->execute();
 }
 
+function updatePlayers($db, $params) {
+	
+}
+
 function closeRooms($curtime, $db) {
-	$req = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
-	$db->exec($req);
+	/* $select = "SELECT id FROM games WHERE updatetime<$curtime AND state=0;";
+	  $res = $db->query($select);
+	  while ($row = $res->fetchArray(SQLITE3_NUM)) {
+	  $arrayOfIDs[] = $row[0];
+	  }
+	  if (isset($arrayOfIDs)) {
+	  $IDstr = implode(",", $arrayOfIDs);
+	  $update = "UPDATE games SET state=1 WHERE id in($IDstr);";
+	  $db->exec($update);
+	  } */
+	$update = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
+	$db->exec($update);
 }
 
 function dbopen($dbname) {
