@@ -105,7 +105,7 @@ function updateRooms($name, $curtime, $room, $db) {
 	if ($room->state == "Lobby") {
 		insertLobby($db, array($room->attributes()['id'], $room->map));
 	} else {
-		$res = searchExisted($db, array($name, $room->attributes()['id'],
+		$res = searchExistedGame($db, array($name, $room->attributes()['id'],
 			$room->map, $room->gametime));
 		$row = $res->fetchArray(SQLITE3_NUM);
 		if (count($row) === 1 and $row !== FALSE) {
@@ -117,7 +117,7 @@ function updateRooms($name, $curtime, $room, $db) {
 				$room->map));
 			$id = $db->lastInsertRowID();
 		}
-		updatePlayers($db, array($room->players, $id));
+		updatePlayers($db, $room->players, $id);
 	}
 }
 
@@ -155,7 +155,7 @@ function insertLobby($db, $params) {
 	$stmt->execute();
 }
 
-function searchExisted($db, $params) {
+function searchExistedGame($db, $params) {
 	$select = "SELECT id FROM games WHERE state=0 AND servername=?
 		AND roomid=? AND map=? AND gametime<=?;";
 	$stmt = $db->prepare($select);
@@ -180,8 +180,54 @@ function updateExisted($db, $params) {
 	$stmt->execute();
 }
 
-function updatePlayers($db, $params) {
-	
+function updatePlayers($db, $players, $roomid) {
+	foreach ($players->player as $player) {
+		if (!$playerID = searchExistedPlayerName($db, $player)) {
+			$playerID = insertNewPlayer($db, $player);
+		}
+		echo "$player " . $player->attributes()['type'] . " $playerID\n";
+		$params = array($playerID, $roomid, $player->attributes()['connected'],
+			ltrim($player->attributes()['color'],"#"));
+		linkUsersToGames($db, $params);
+	}
+}
+
+function searchExistedPlayerName($db, $player) {
+	$select = "SELECT id FROM users WHERE name=?";
+	$stmt = $db->prepare($select);
+	if ($player->attributes()['type'] == "AI Player") {
+		$name = "AI Player";
+	} else {
+		$name = $player;
+	}
+	stmtBind($stmt, array($name), "s");
+	$res = $stmt->execute();
+	$row = $res->fetchArray(SQLITE3_NUM);
+	if (count($row) !== 1 or $row === FALSE) {
+		return FALSE;
+	}
+	return $row[0];
+}
+
+function insertNewPlayer($db, $player) {
+	$insert = "INSERT INTO users (name) VALUES (?);";
+	$stmt = $db->prepare($insert);
+	if ($player->attributes()['type'] == "AI Player") {
+		$name = "AI Player";
+	} else {
+		$name = $player;
+	}
+	stmtBind($stmt, array($name), "s");
+	$stmt->execute();
+	return $db->lastInsertRowID();
+}
+
+function linkUsersToGames($db, $params) {
+	$insert = "INSERT OR REPLACE INTO usersInGames
+		(iduser, idgame, connected, color) VALUES (?,?,?,?)";
+	$stmt = $db->prepare($insert);
+	stmtBind($stmt, $params, "iiis");
+	$stmt->execute();
 }
 
 function closeRooms($curtime, $db) {
@@ -195,6 +241,7 @@ function dbopen($dbname) {
 		echo $db->lastErrorMsg();
 		return FALSE;
 	} else {
+		$db->exec('PRAGMA foreign_keys = ON;');
 		echo "Opened database successfully\n";
 		return $db;
 	}
