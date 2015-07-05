@@ -241,7 +241,7 @@ function dbopen($dbname) {
 		echo $db->lastErrorMsg();
 		return FALSE;
 	} else {
-		$db->exec('PRAGMA foreign_keys = ON;');
+		$db->exec('PRAGMA foreign_keys = ON;PRAGMA busy_timeout=100;');
 		echo "Opened database successfully\n";
 		return $db;
 	}

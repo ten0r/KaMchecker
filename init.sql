@@ -28,5 +28,5 @@ connected INTEGER,
 color VARCHAR(6),
 FOREIGN KEY (iduser) REFERENCES users(id) ON DELETE CASCADE,
 FOREIGN KEY (idgame) REFERENCES games(id) ON DELETE CASCADE,
-PRIMARY KEY (iduser,idgame)
+PRIMARY KEY (iduser,idgame,color)
 );
