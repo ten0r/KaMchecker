@@ -185,7 +185,6 @@ function updatePlayers($db, $players, $roomid) {
 		if (!$playerID = searchExistedPlayerName($db, $player)) {
 			$playerID = insertNewPlayer($db, $player);
 		}
-		echo "$player " . $player->attributes()['type'] . " $playerID\n";
 		$params = [$playerID, $roomid, $player->attributes()['connected'],
 			ltrim($player->attributes()['color'],"#")];
 		linkUsersToGames($db, $params);
