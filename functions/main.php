@@ -103,18 +103,18 @@ function updateRooms($name, $curtime, $room, $db) {
 	//print_r($room->players);
 	//print_r($room);
 	if ($room->state == "Lobby") {
-		insertLobby($db, array($room->attributes()['id'], $room->map));
+		insertLobby($db, [$room->attributes()['id'], $room->map]);
 	} else {
-		$res = searchExistedGame($db, array($name, $room->attributes()['id'],
-			$room->map, $room->gametime));
+		$res = searchExistedGame($db, [$name, $room->attributes()['id'],
+			$room->map, $room->gametime]);
 		$row = $res->fetchArray(SQLITE3_NUM);
 		if (count($row) === 1 and $row !== FALSE) {
-			updateExisted($db, array($room->gametime, $curtime, $row[0]));
+			updateExisted($db, [$room->gametime, $curtime, $row[0]]);
 			$id = $row[0];
 		} else {
-			insertNew($db, array($name, $room->attributes()['id'],
+			insertNew($db, [$name, $room->attributes()['id'],
 				$room->roomplayercount, $curtime, $room->gametime, $curtime,
-				$room->map));
+				$room->map]);
 			$id = $db->lastInsertRowID();
 		}
 		updatePlayers($db, $room->players, $id);
@@ -186,8 +186,8 @@ function updatePlayers($db, $players, $roomid) {
 			$playerID = insertNewPlayer($db, $player);
 		}
 		echo "$player " . $player->attributes()['type'] . " $playerID\n";
-		$params = array($playerID, $roomid, $player->attributes()['connected'],
-			ltrim($player->attributes()['color'],"#"));
+		$params = [$playerID, $roomid, $player->attributes()['connected'],
+			ltrim($player->attributes()['color'],"#")];
 		linkUsersToGames($db, $params);
 	}
 }
@@ -200,7 +200,7 @@ function searchExistedPlayerName($db, $player) {
 	} else {
 		$name = $player;
 	}
-	stmtBind($stmt, array($name), "s");
+	stmtBind($stmt, [$name], "s");
 	$res = $stmt->execute();
 	$row = $res->fetchArray(SQLITE3_NUM);
 	if (count($row) !== 1 or $row === FALSE) {
@@ -217,7 +217,7 @@ function insertNewPlayer($db, $player) {
 	} else {
 		$name = $player;
 	}
-	stmtBind($stmt, array($name), "s");
+	stmtBind($stmt, [$name], "s");
 	$stmt->execute();
 	return $db->lastInsertRowID();
 }
