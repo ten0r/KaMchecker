@@ -99,9 +99,6 @@ function xmlToDB($datas, $dbname) {
 }
 
 function updateRooms($name, $curtime, $room, $db) {
-	//print_r($room->attributes()['id']);
-	//print_r($room->players);
-	//print_r($room);
 	if ($room->state == "Lobby") {
 		insertLobby($db, [$room->attributes()['id'], $room->map]);
 	} else {

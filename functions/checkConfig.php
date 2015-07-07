@@ -20,11 +20,28 @@
 if (!isset($config["init"])) {
 	$config["init"] = true;
 }
+if (!isset($config["dbtype"])) {
+	$dbtype = readline("Choose database: (1)sqlite, (2)mysql\nDefault sqlite. ");
+}
+if ($dbtype == 2) {
+	if (!isset($config["dbtype"])) {
+		$config["dbtype"] = "mysql";
+	}
+	if (!isset($config["user"])) {
+		$config["user"] = readline("Set database access user\n");
+	}
+	if (!isset($config["password"])) {
+		$config["password"] = readline("Set database user password\nLeave empty for anonymous access");
+	}
+}
+if (!isset($config["dbtype"])) {
+	$config["dbtype"] = "sqlite";
+}
 if (!isset($config["dbname"])) {
-	$config["dbname"] = "database.db";
+	$config["dbname"] = readline("Set database name\n");
 }
 if (!isset($config["files"])) {
 	$config["files"] = array(
-		["example"] => "http://example.org/status.xml"
+		"example" => "http://example.org/status.xml"
 	);
 }
