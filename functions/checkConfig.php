@@ -22,10 +22,19 @@ if (!isset($config["init"])) {
 }
 if (!isset($config["dbtype"])) {
 	$dbtype = readline("Choose database: (1)sqlite, (2)mysql\nDefault sqlite. ");
-}
-if ($dbtype == 2) {
-	if (!isset($config["dbtype"])) {
+	if ($dbtype == 2) {
 		$config["dbtype"] = "mysql";
+	} else {
+		$config["dbtype"] = "sqlite";
+	}
+}
+
+if ($config["dbtype"] == "mysql") {
+	if (!isset($config["host"])) {
+		$config["host"] = readline("Set database host");
+	}
+	if (!isset($config["port"])) {
+		$config["port"] = readline("Set database port");
 	}
 	if (!isset($config["user"])) {
 		$config["user"] = readline("Set database access user\n");
@@ -34,9 +43,7 @@ if ($dbtype == 2) {
 		$config["password"] = readline("Set database user password\nLeave empty for anonymous access");
 	}
 }
-if (!isset($config["dbtype"])) {
-	$config["dbtype"] = "sqlite";
-}
+
 if (!isset($config["dbname"])) {
 	$config["dbname"] = readline("Set database name\n");
 }

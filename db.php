@@ -23,6 +23,12 @@ include_once("functions/checkConfig.php");
 if (!ini_get('date.timezone')) {
 	date_default_timezone_set('GMT');
 }
+if ($config["dbtype"]=="mysql") {
+	include_once ("functions/mysqlFunctions.php");
+}
+else {
+	include_once ("functions/sqliteFunctions.php");
+}
 if ($config["init"]) {
 	echo "Install\n";
 	echo "Creating database\n";
@@ -35,7 +41,7 @@ if ($config["init"]) {
 }
 file_put_contents("config.php", "<?php\n\nreturn " . var_export($config, true) . ";");
 $data = getXML($config["files"]);
-if (!xmlToDB($data, $config["dbname"])) {
+if (!xmlToDB($data)) {
 	echo "Open failed\n";
 	return 1;
 }
