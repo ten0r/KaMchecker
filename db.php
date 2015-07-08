@@ -16,31 +16,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 chdir(dirname(__FILE__));
-$config = include_once("config.php");
-include_once("functions/main.php");
-include_once("functions/checkConfig.php");
+$_config = require_once("config.php");
+require_once("functions/main.php");
+require_once("functions/checkConfig.php");
 if (!ini_get('date.timezone')) {
 	date_default_timezone_set('GMT');
 }
-if ($config["dbtype"]=="mysql") {
+if ($_config["dbtype"] == "mysql") {
 	include_once ("functions/mysqlFunctions.php");
-}
-else {
+} else {
 	include_once ("functions/sqliteFunctions.php");
 }
-if ($config["init"]) {
+if ($_config["init"]) {
 	echo "Install\n";
 	echo "Creating database\n";
 	if (!init()) {
 		echo "Terminating\n";
 		return 1;
 	}
-	$config["init"] = FALSE;
+	$_config["init"] = FALSE;
 	echo "Installation mode disabled\nInstallation finished\n";
 }
-file_put_contents("config.php", "<?php\n\nreturn " . var_export($config, true) . ";");
-$data = getXML($config["files"]);
+file_put_contents("config.php", "<?php\n\nreturn " . var_export($_config, true) . ";");
+$data = getXML($_config["files"]);
 if (!xmlToDB($data)) {
 	echo "Open failed\n";
 	return 1;

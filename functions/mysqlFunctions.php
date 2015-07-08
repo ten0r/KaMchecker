@@ -31,12 +31,12 @@ function init() {
 }
 
 function dbopen() {
-	global $config;
-	$host = $config;
-	$port = $config;
-	$database = $config["dbname"];
-	$username = $config["user"];
-	$password = $config["password"];
+	global $_config;
+	$host = $_config;
+	$port = $_config;
+	$database = $_config["dbname"];
+	$username = $_config["user"];
+	$password = $_config["password"];
 	$db = new mysqli($host, $username, $password, $database, $port);
 	if ($db->connect_error) {
 		echo "Connection error (" . $db->connect_errno . ") " . $db->connect_error;
@@ -48,10 +48,16 @@ function dbopen() {
 }
 
 function dbclose($db) {
+	/* @var $db mysqli */
 	if (!$db->close()) {
 		echo "Close error\n";
 		return FALSE;
 	}
 	echo "Closed successfully\n";
 	return TRUE;
+}
+
+function clearLobbies($db) {
+	/* @var $db mysqli */
+	$db->query("DELETE FROM lobby;");
 }

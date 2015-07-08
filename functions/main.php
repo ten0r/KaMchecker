@@ -17,9 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Downloads xml files
+ *
+ * @global array $_config
+ * @return array
+ */
 function getXML() {
-	global $config;
-	$files = $config["files"];
+	global $_config;
+	$files = $_config["files"];
 	foreach ($files as $filename => $file) {
 		$filehandle = fopen($file, "r");
 		if (!$filehandle) {
@@ -33,6 +39,12 @@ function getXML() {
 	return $datas;
 }
 
+/**
+ * Puts data from XML to database
+ *
+ * @param array $datas
+ * @return boolean
+ */
 function xmlToDB($datas) {
 	$curtime = time();
 	echo date('d-m-Y_H:i:s', $curtime) . " $curtime\n";
@@ -53,16 +65,22 @@ function xmlToDB($datas) {
 	return TRUE;
 }
 
+/**
+ * Controls information about room current status
+ *
+ * @param string $name
+ * @param int $curtime
+ * @param SimpleXMLElement $room
+ * @param SQLite3 $db
+ */
 function updateRooms($name, $curtime, $room, $db) {
 	if ($room->state == "Lobby") {
 		insertLobby($db, [$room->attributes()['id'], $room->map]);
 	} else {
-		$res = searchExistedGame($db, [$name, $room->attributes()['id'],
+		$id = searchExistedGame($db, [$name, $room->attributes()['id'],
 			$room->map, $room->gametime]);
-		$row = $res->fetchArray(SQLITE3_NUM);
-		if (count($row) === 1 and $row !== FALSE) {
-			updateExisted($db, [$room->gametime, $curtime, $row[0]]);
-			$id = $row[0];
+		if ($id) {
+			updateExisted($db, [$room->gametime, $curtime, $id]);
 		} else {
 			insertNew($db, [$name, $room->attributes()['id'],
 				$room->roomplayercount, $curtime, $room->gametime, $curtime,
@@ -73,6 +91,13 @@ function updateRooms($name, $curtime, $room, $db) {
 	}
 }
 
+/**
+ * Controls information about players in the room
+ *
+ * @param SQLite3 $db
+ * @param SimpleXMLElement $players
+ * @param int $roomid
+ */
 function updatePlayers($db, $players, $roomid) {
 	foreach ($players->player as $player) {
 		if (!$playerID = searchExistedPlayerName($db, $player)) {

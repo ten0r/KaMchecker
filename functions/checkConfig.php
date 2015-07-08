@@ -17,38 +17,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-if (!isset($config["init"])) {
-	$config["init"] = true;
+if (!isset($_config["init"])) {
+	$_config["init"] = true;
 }
-if (!isset($config["dbtype"])) {
+if (!isset($_config["dbtype"])) {
 	$dbtype = readline("Choose database: (1)sqlite, (2)mysql\nDefault sqlite. ");
 	if ($dbtype == 2) {
-		$config["dbtype"] = "mysql";
+		$_config["dbtype"] = "mysql";
 	} else {
-		$config["dbtype"] = "sqlite";
+		$_config["dbtype"] = "sqlite";
 	}
 }
 
-if ($config["dbtype"] == "mysql") {
-	if (!isset($config["host"])) {
-		$config["host"] = readline("Set database host");
+if ($_config["dbtype"] == "mysql") {
+	if (!isset($_config["host"])) {
+		$_config["host"] = readline("Set database host");
 	}
-	if (!isset($config["port"])) {
-		$config["port"] = readline("Set database port");
+	if (!isset($_config["port"])) {
+		$_config["port"] = readline("Set database port");
 	}
-	if (!isset($config["user"])) {
-		$config["user"] = readline("Set database access user\n");
+	if (!isset($_config["user"])) {
+		$_config["user"] = readline("Set database access user\n");
 	}
-	if (!isset($config["password"])) {
-		$config["password"] = readline("Set database user password\nLeave empty for anonymous access");
+	if (!isset($_config["password"])) {
+		$_config["password"] = readline("Set database user password\nLeave empty for anonymous access");
 	}
 }
 
-if (!isset($config["dbname"])) {
-	$config["dbname"] = readline("Set database name\n");
+if (!isset($_config["dbname"])) {
+	$_config["dbname"] = readline("Set database name\n");
 }
-if (!isset($config["files"])) {
-	$config["files"] = array(
+if (!isset($_config["files"])) {
+	$_config["files"] = array(
 		"example" => "http://example.org/status.xml"
 	);
 }

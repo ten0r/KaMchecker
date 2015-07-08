@@ -17,9 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ *
+ * @global array $_config
+ * @return boolean
+ */
 function init() {
-	global $config;
-	$dbname = $config["dbname"];
+	global $_config;
+	$dbname = $_config["dbname"];
 	if (file_exists($dbname)) {
 		if (!archieveOld($dbname)) {
 			return FALSE;
@@ -38,6 +43,11 @@ function init() {
 	return TRUE;
 }
 
+/**
+ *
+ * @param string $dbname
+ * @return boolean
+ */
 function archieveOld($dbname) {
 	echo "Moving old file\n";
 	$backupDir = date('d-m-Y_H:i:s', time());
@@ -59,11 +69,22 @@ function archieveOld($dbname) {
 	return TRUE;
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ */
 function clearLobbies($db) {
 	$db->exec("DELETE FROM lobby;");
 	$db->exec("DELETE FROM sqlite_sequence WHERE name = 'lobby';");
 }
 
+/**
+ *
+ * @param SQLite3Stmt $stmt
+ * @param array $params
+ * @param string $outertypes
+ * @return boolean
+ */
 function stmtBind($stmt, $params, $outertypes) {
 	$types = strtolower($outertypes);
 	if (count($params) !== strlen($types)) {
@@ -81,6 +102,11 @@ function stmtBind($stmt, $params, $outertypes) {
 	return TRUE;
 }
 
+/**
+ *
+ * @param string $type
+ * @return int
+ */
 function typeToSqlite($type) {
 	switch ($type) {
 		case "i": return SQLITE3_INTEGER;
@@ -91,6 +117,11 @@ function typeToSqlite($type) {
 	}
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param array $params
+ */
 function insertLobby($db, $params) {
 	$insert = "INSERT INTO lobby (count,map) VALUES (?,?);";
 	$stmt = $db->prepare($insert);
@@ -98,15 +129,30 @@ function insertLobby($db, $params) {
 	$stmt->execute();
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param array $params
+ * @return boolean
+ */
 function searchExistedGame($db, $params) {
 	$select = "SELECT id FROM games WHERE state=0 AND servername=?
 		AND roomid=? AND map=? AND gametime<=?;";
 	$stmt = $db->prepare($select);
 	stmtBind($stmt, $params, "siss");
 	$res = $stmt->execute();
-	return $res;
+	$row = $res->fetchArray(SQLITE3_NUM);
+	if (count($row) !== 1 or $row === FALSE) {
+		return FALSE;
+	}
+	return $row[0];
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param array $params
+ */
 function insertNew($db, $params) {
 	$insert = "INSERT INTO games
 		(servername,roomid,count,starttime,gametime,updatetime,map)
@@ -116,6 +162,11 @@ function insertNew($db, $params) {
 	$stmt->execute();
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param array $params
+ */
 function updateExisted($db, $params) {
 	$update = "UPDATE games SET gametime=?, updatetime=? WHERE id=?;";
 	$stmt = $db->prepare($update);
@@ -123,6 +174,12 @@ function updateExisted($db, $params) {
 	$stmt->execute();
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param SimpleXMLElement $player
+ * @return boolean
+ */
 function searchExistedPlayerName($db, $player) {
 	$select = "SELECT id FROM users WHERE name=?";
 	$stmt = $db->prepare($select);
@@ -140,6 +197,12 @@ function searchExistedPlayerName($db, $player) {
 	return $row[0];
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param SimpleXMLElement $player
+ * @return int
+ */
 function insertNewPlayer($db, $player) {
 	$insert = "INSERT INTO users (name) VALUES (?);";
 	$stmt = $db->prepare($insert);
@@ -153,6 +216,11 @@ function insertNewPlayer($db, $player) {
 	return $db->lastInsertRowID();
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @param array $params
+ */
 function linkUsersToGames($db, $params) {
 	$insert = "INSERT OR REPLACE INTO usersInGames
 		(iduser, idgame, connected, color) VALUES (?,?,?,?)";
@@ -161,25 +229,39 @@ function linkUsersToGames($db, $params) {
 	$stmt->execute();
 }
 
+/**
+ *
+ * @param int $curtime
+ * @param SQLite3 $db
+ */
 function closeRooms($curtime, $db) {
 	$update = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
 	$db->exec($update);
 }
 
+/**
+ *
+ * @global array $_config
+ * @return \SQLite3|boolean
+ */
 function dbopen() {
-	global $config;
-	$dbname = $config["dbname"];
+	global $_config;
+	$dbname = $_config["dbname"];
 	$db = new SQLite3($dbname);
 	if (!$db) {
 		echo $db->lastErrorMsg();
 		return FALSE;
-	} else {
-		$db->exec('PRAGMA foreign_keys = ON;PRAGMA busy_timeout=100;');
-		echo "Opened database successfully\n";
-		return $db;
 	}
+	$db->exec('PRAGMA foreign_keys = ON;PRAGMA busy_timeout=100;');
+	echo "Opened database successfully\n";
+	return $db;
 }
 
+/**
+ *
+ * @param SQLite3 $db
+ * @return boolean
+ */
 function dbclose($db) {
 	if (!$db->close()) {
 		echo "Close error\n";
