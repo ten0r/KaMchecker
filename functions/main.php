@@ -77,10 +77,10 @@ function updateRooms($name, $curtime, $room, $db) {
 	if ($room->state == "Lobby") {
 		insertLobby($db, [$room->attributes()['id'], $room->map]);
 	} else {
-		$id = searchExistedGame($db, [$name, $room->attributes()['id'],
+		$id = searchExistingGame($db, [$name, $room->attributes()['id'],
 			$room->map, $room->gametime]);
 		if ($id) {
-			updateExisted($db, [$room->gametime, $curtime, $id]);
+			updateExisting($db, [$room->gametime, $curtime, $id]);
 		} else {
 			insertNew($db, [$name, $room->attributes()['id'],
 				$room->roomplayercount, $curtime, $room->gametime, $curtime,
@@ -100,7 +100,7 @@ function updateRooms($name, $curtime, $room, $db) {
  */
 function updatePlayers($db, $players, $roomid) {
 	foreach ($players->player as $player) {
-		if (!$playerID = searchExistedPlayerName($db, $player)) {
+		if (!$playerID = searchExistingPlayerName($db, $player)) {
 			$playerID = insertNewPlayer($db, $player);
 		}
 		$params = [$playerID, $roomid, $player->attributes()['connected'],

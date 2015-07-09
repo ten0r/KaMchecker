@@ -18,6 +18,7 @@
  */
 
 /**
+ * Archieves old database and creates new
  *
  * @global array $_config
  * @return boolean
@@ -44,6 +45,7 @@ function init() {
 }
 
 /**
+ * Archieves old database
  *
  * @param string $dbname
  * @return boolean
@@ -70,6 +72,7 @@ function archieveOld($dbname) {
 }
 
 /**
+ * Clears lobbies
  *
  * @param SQLite3 $db
  */
@@ -79,6 +82,7 @@ function clearLobbies($db) {
 }
 
 /**
+ * Binds variables to the statements
  *
  * @param SQLite3Stmt $stmt
  * @param array $params
@@ -103,8 +107,9 @@ function stmtBind($stmt, $params, $outertypes) {
 }
 
 /**
+ * Converts char to appropriate SQLITE3 variable type
  *
- * @param string $type
+ * @param char $type
  * @return int
  */
 function typeToSqlite($type) {
@@ -118,6 +123,7 @@ function typeToSqlite($type) {
 }
 
 /**
+ * Fills lobby table
  *
  * @param SQLite3 $db
  * @param array $params
@@ -130,12 +136,13 @@ function insertLobby($db, $params) {
 }
 
 /**
+ * Searches for existing games
  *
  * @param SQLite3 $db
  * @param array $params
  * @return boolean
  */
-function searchExistedGame($db, $params) {
+function searchExistingGame($db, $params) {
 	$select = "SELECT id FROM games WHERE state=0 AND servername=?
 		AND roomid=? AND map=? AND gametime<=?;";
 	$stmt = $db->prepare($select);
@@ -149,6 +156,7 @@ function searchExistedGame($db, $params) {
 }
 
 /**
+ * Fills games table with new game rooms
  *
  * @param SQLite3 $db
  * @param array $params
@@ -163,11 +171,12 @@ function insertNew($db, $params) {
 }
 
 /**
+ * Updates existing games
  *
  * @param SQLite3 $db
  * @param array $params
  */
-function updateExisted($db, $params) {
+function updateExisting($db, $params) {
 	$update = "UPDATE games SET gametime=?, updatetime=? WHERE id=?;";
 	$stmt = $db->prepare($update);
 	stmtBind($stmt, $params, "sii");
@@ -175,12 +184,13 @@ function updateExisted($db, $params) {
 }
 
 /**
+ * Searches for existing users
  *
  * @param SQLite3 $db
  * @param SimpleXMLElement $player
  * @return boolean
  */
-function searchExistedPlayerName($db, $player) {
+function searchExistingPlayerName($db, $player) {
 	$select = "SELECT id FROM users WHERE name=?";
 	$stmt = $db->prepare($select);
 	if ($player->attributes()['type'] == "AI Player") {
@@ -198,6 +208,7 @@ function searchExistedPlayerName($db, $player) {
 }
 
 /**
+ * Fills users table with new users
  *
  * @param SQLite3 $db
  * @param SimpleXMLElement $player
@@ -217,6 +228,7 @@ function insertNewPlayer($db, $player) {
 }
 
 /**
+ * Fills userInGames table with data about players in rooms
  *
  * @param SQLite3 $db
  * @param array $params
@@ -230,6 +242,7 @@ function linkUsersToGames($db, $params) {
 }
 
 /**
+ * Closes ended games
  *
  * @param int $curtime
  * @param SQLite3 $db
@@ -240,6 +253,7 @@ function closeRooms($curtime, $db) {
 }
 
 /**
+ * Opens database access
  *
  * @global array $_config
  * @return \SQLite3|boolean
@@ -258,6 +272,7 @@ function dbopen() {
 }
 
 /**
+ * Closes database access
  *
  * @param SQLite3 $db
  * @return boolean
