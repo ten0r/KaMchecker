@@ -40,7 +40,7 @@ function init() {
 		echo $db->lastErrorMsg();
 		return FALSE;
 	}
-	echo "Table created successfully\n";
+	echo "Database created successfully\n";
 	return TRUE;
 }
 

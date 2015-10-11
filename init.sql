@@ -1,3 +1,7 @@
+DROP TABLE if exists userInGames;
+DROP TABLE if exists users;
+DROP TABLE if exists lobby;
+DROP TABLE if exists games;
 CREATE TABLE if not exists lobby
 (
 count INTEGER NOT NULL,

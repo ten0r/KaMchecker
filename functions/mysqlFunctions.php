@@ -17,6 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * Creates new database
+ *
+ * @return boolean
+ */
 function init() {
 	if (!$db = dbopen()) {
 		return FALSE;
@@ -26,10 +31,16 @@ function init() {
 		echo $db->lastErrorMsg();
 		return FALSE;
 	}
-	echo "Table created successfully\n";
+	echo "Database created successfully\n";
 	return TRUE;
 }
 
+/**
+ * Opens database access
+ *
+ * @global array $_config
+ * @return boolean|\mysqli
+ */
 function dbopen() {
 	global $_config;
 	$host = $_config;
@@ -47,8 +58,13 @@ function dbopen() {
 	}
 }
 
+/**
+ * Closes database access
+ *
+ * @param mysqli $db
+ * @return boolean
+ */
 function dbclose($db) {
-	/* @var $db mysqli */
 	if (!$db->close()) {
 		echo "Close error\n";
 		return FALSE;
@@ -57,7 +73,37 @@ function dbclose($db) {
 	return TRUE;
 }
 
+/**
+ * Clears lobbies
+ *
+ * @param mysqli $db
+ */
 function clearLobbies($db) {
 	/* @var $db mysqli */
 	$db->query("DELETE FROM lobby;");
+	$db->query("ALTER TABLE lobby AUTO_INCREMENT=0;");
+}
+
+/**
+ *
+ * @param mysqli $db
+ * @param array $params
+ */
+function insertLobby($db, $params) {
+	$insert = "INSERT INTO lobby (count,map) VALUES (?,?);";
+	/* @var $stmt mysqli_stmt */
+	$stmt = $db->prepare($insert);
+	stmtBind($stmt, $params, "is");
+	$stmt->execute();
+}
+
+/**
+ *
+ * @param mysqli_stmt $stmt
+ * @param array $params
+ * @param string $types
+ */
+function stmtBind($stmt, $params, $types) {
+	array_unshift($params, $types);
+	call_user_func_array(array($stmt,'bind_param'),$params);
 }
