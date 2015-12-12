@@ -244,10 +244,10 @@ function linkUsersToGames($db, $params) {
 /**
  * Closes ended games
  *
- * @param int $curtime
  * @param SQLite3 $db
+ * @param int $curtime
  */
-function closeRooms($curtime, $db) {
+function closeRooms($db, $curtime) {
 	$update = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
 	$db->exec($update);
 }

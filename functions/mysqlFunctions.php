@@ -85,6 +85,7 @@ function clearLobbies($db) {
 }
 
 /**
+ * Fills lobby table
  *
  * @param mysqli $db
  * @param array $params
@@ -98,6 +99,7 @@ function insertLobby($db, $params) {
 }
 
 /**
+ * Binds stmt values to mysqli stmt
  *
  * @param mysqli_stmt $stmt
  * @param array $params
@@ -108,6 +110,12 @@ function stmtBind($stmt, $params, $types) {
 	call_user_func_array(array($stmt, 'bind_param'), refValues($params));
 }
 
+/**
+ * Convert array of to array of references to the elements of the initial array
+ * 
+ * @param array $arr
+ * @return array
+ */
 function refValues($arr) {
 	$refs = array();
 	foreach (array_keys($arr) as $key) {
@@ -116,6 +124,13 @@ function refValues($arr) {
 	return $refs;
 }
 
+/**
+ * Searches for existing games
+ * 
+ * @param mysqli $db
+ * @param array $params
+ * @return int
+ */
 function searchExistingGame($db, $params) {
 	$select = "SELECT id FROM games WHERE state=0 AND servername=?
 		AND roomid=? AND map=? AND gametime<=?;";
@@ -130,6 +145,12 @@ function searchExistingGame($db, $params) {
 	return $row[0];
 }
 
+/**
+ * Fills games table with new game rooms
+ * 
+ * @param mysqli $db
+ * @param array $params
+ */
 function insertNew($db, $params) {
 	$insert = "INSERT INTO games
 		(servername,roomid,count,starttime,gametime,updatetime,map)
@@ -149,6 +170,12 @@ function lastInsertId($db) {
 	return $db->insert_id;
 }
 
+/**
+ * Updates existing games
+ * 
+ * @param mysqli $db
+ * @param array $params
+ */
 function updateExisting($db, $params) {
 	$update = "UPDATE games SET gametime=?, updatetime=? WHERE id=?;";
 	$stmt = $db->prepare($update);
@@ -156,6 +183,13 @@ function updateExisting($db, $params) {
 	$stmt->execute();
 }
 
+/**
+ * Searches for existing users
+ * 
+ * @param mysqli $db
+ * @param SimpleXMLElement $player
+ * @return int
+ */
 function searchExistingPlayerName($db, $player) {
 	$select = "SELECT id FROM users WHERE name=?";
 	$stmt = $db->prepare($select);
@@ -174,6 +208,13 @@ function searchExistingPlayerName($db, $player) {
 	return $row[0];
 }
 
+/**
+ * Fills users table with new users
+ * 
+ * @param mysqli $db
+ * @param SimpleXMLElement $player
+ * @return int
+ */
 function insertNewPlayer($db, $player) {
 	$insert = "INSERT INTO users (name) VALUES (?);";
 	$stmt = $db->prepare($insert);
@@ -187,6 +228,12 @@ function insertNewPlayer($db, $player) {
 	return $db->insert_id;
 }
 
+/**
+ * Fills userInGames table with data about players in rooms
+ * 
+ * @param mysqli $db
+ * @param array $params
+ */
 function linkUsersToGames($db, $params) {
 	$insert = "INSERT IGNORE INTO usersInGames	
 		(iduser, idgame, connected, color) VALUES (?,?,?,?)";
@@ -195,7 +242,13 @@ function linkUsersToGames($db, $params) {
 	$stmt->execute();
 }
 
-function closeRooms($curtime, $db) {
+/**
+ * Closes ended games
+ * 
+ * @param mysqli $db
+ * @param int $curtime
+ */
+function closeRooms($db, $curtime) {
 	$update = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
 	$db->query($update);
 }

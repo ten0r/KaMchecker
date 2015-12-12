@@ -58,7 +58,7 @@ function xmlToDB($datas) {
 			updateRooms($name, $curtime, $room, $db);
 		}
 	}
-	closeRooms($curtime, $db);
+	closeRooms($db, $curtime);
 	if (!dbclose($db)) {
 		return FALSE;
 	}
