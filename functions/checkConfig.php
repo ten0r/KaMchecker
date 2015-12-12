@@ -31,16 +31,16 @@ if (!isset($_config["dbtype"])) {
 
 if ($_config["dbtype"] == "mysql") {
 	if (!isset($_config["host"])) {
-		$_config["host"] = readline("Set database host");
+		$_config["host"] = readline("Set database host: ");
 	}
 	if (!isset($_config["port"])) {
-		$_config["port"] = readline("Set database port");
+		$_config["port"] = readline("Set database port: ");
 	}
 	if (!isset($_config["user"])) {
-		$_config["user"] = readline("Set database access user\n");
+		$_config["user"] = readline("Set database access user: ");
 	}
 	if (!isset($_config["password"])) {
-		$_config["password"] = readline("Set database user password\nLeave empty for anonymous access");
+		$_config["password"] = readline("Set database user password\nLeave empty for anonymous access: ");
 	}
 }
 

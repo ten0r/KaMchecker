@@ -34,7 +34,7 @@ function init() {
 	if (!$db = dbopen()) {
 		return FALSE;
 	}
-	$sql = file_get_contents("init.sql");
+	$sql = file_get_contents("sql/init.sql");
 	$ret = $db->exec($sql);
 	if (!$ret) {
 		echo $db->lastErrorMsg();
@@ -284,4 +284,14 @@ function dbclose($db) {
 	}
 	echo "Closed successfully\n";
 	return TRUE;
+}
+
+/**
+ * Returns the auto generated id used in the last query
+ * 
+ * @param SQLite3 $db
+ * @return int
+ */
+function lastInsertId($db) {
+	return $db->lastInsertRowID();
 }

@@ -85,7 +85,7 @@ function updateRooms($name, $curtime, $room, $db) {
 			insertNew($db, [$name, $room->attributes()['id'],
 				$room->roomplayercount, $curtime, $room->gametime, $curtime,
 				$room->map]);
-			$id = $db->lastInsertRowID();
+			$id = lastInsertId($db);
 		}
 		updatePlayers($db, $room->players, $id);
 	}

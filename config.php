@@ -2,11 +2,15 @@
 
 return array (
   'init' => false,
-  'dbname' => 'test.db',
+  'dbtype' => 'mysql',
+  'dbname' => 'kamchecker',
   'files' => 
   array (
     'tenor' => 'https://tenor.no-ip.info/kam/stat.xml',
     'nizgard' => 'http://nizgard.eu/kam-stable/status.xml',
   ),
-  'dbtype' => 'sqlite',
+  'user' => 'kamchecker',
+  'password' => 'RFVxtrth!!',
+  'host' => 'localhost',
+  'port' => '3306',
 );

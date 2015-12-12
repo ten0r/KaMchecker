@@ -26,7 +26,7 @@ function init() {
 	if (!$db = dbopen()) {
 		return FALSE;
 	}
-	$sql = file_get_contents("init.sql");
+	$sql = file_get_contents("sql/mysql.sql");
 	if (!$db->multi_query($sql)) {
 		echo $db->lastErrorMsg();
 		return FALSE;
@@ -43,8 +43,8 @@ function init() {
  */
 function dbopen() {
 	global $_config;
-	$host = $_config;
-	$port = $_config;
+	$host = $_config["host"];
+	$port = $_config["port"];
 	$database = $_config["dbname"];
 	$username = $_config["user"];
 	$password = $_config["password"];
@@ -105,5 +105,97 @@ function insertLobby($db, $params) {
  */
 function stmtBind($stmt, $params, $types) {
 	array_unshift($params, $types);
-	call_user_func_array(array($stmt,'bind_param'),$params);
+	call_user_func_array(array($stmt, 'bind_param'), refValues($params));
+}
+
+function refValues($arr) {
+	$refs = array();
+	foreach (array_keys($arr) as $key) {
+		$refs[$key] = &$arr[$key];
+	}
+	return $refs;
+}
+
+function searchExistingGame($db, $params) {
+	$select = "SELECT id FROM games WHERE state=0 AND servername=?
+		AND roomid=? AND map=? AND gametime<=?;";
+	$stmt = $db->prepare($select);
+	stmtBind($stmt, $params, "siss");
+	$stmt->execute();
+	$res = $stmt->get_result();
+	$row = $res->fetch_array(MYSQLI_NUM);
+	if (count($row) !== 1 or $row === FALSE) {
+		return FALSE;
+	}
+	return $row[0];
+}
+
+function insertNew($db, $params) {
+	$insert = "INSERT INTO games
+		(servername,roomid,count,starttime,gametime,updatetime,map)
+		VALUES (?, ?, ?, ?, ?, ?, ?);";
+	$stmt = $db->prepare($insert);
+	stmtBind($stmt, $params, "siiisis");
+	$stmt->execute();
+}
+
+/**
+ * Returns the auto generated id used in the last query
+ * 
+ * @param mysqli $db
+ * @return int
+ */
+function lastInsertId($db) {
+	return $db->insert_id;
+}
+
+function updateExisting($db, $params) {
+	$update = "UPDATE games SET gametime=?, updatetime=? WHERE id=?;";
+	$stmt = $db->prepare($update);
+	stmtBind($stmt, $params, "sii");
+	$stmt->execute();
+}
+
+function searchExistingPlayerName($db, $player) {
+	$select = "SELECT id FROM users WHERE name=?";
+	$stmt = $db->prepare($select);
+	if ($player->attributes()['type'] == "AI Player") {
+		$name = "AI Player";
+	} else {
+		$name = $player;
+	}
+	stmtBind($stmt, [$name], "s");
+	$stmt->execute();
+	$res = $stmt->get_result();
+	$row = $res->fetch_array(MYSQLI_NUM);
+	if (count($row) !== 1 or $row === FALSE) {
+		return FALSE;
+	}
+	return $row[0];
+}
+
+function insertNewPlayer($db, $player) {
+	$insert = "INSERT INTO users (name) VALUES (?);";
+	$stmt = $db->prepare($insert);
+	if ($player->attributes()['type'] == "AI Player") {
+		$name = "AI Player";
+	} else {
+		$name = $player;
+	}
+	stmtBind($stmt, [$name], "s");
+	$stmt->execute();
+	return $db->insert_id;
+}
+
+function linkUsersToGames($db, $params) {
+	$insert = "INSERT IGNORE INTO usersInGames	
+		(iduser, idgame, connected, color) VALUES (?,?,?,?)";
+	$stmt = $db->prepare($insert);
+	stmtBind($stmt, $params, "iiis");
+	$stmt->execute();
+}
+
+function closeRooms($curtime, $db) {
+	$update = "UPDATE games SET state=1 WHERE updatetime<$curtime AND state=0;";
+	$db->query($update);
 }
